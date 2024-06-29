@@ -1,31 +1,34 @@
 pipeline {
     agent any
-
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
     
-        stage ("terraform init") {
+    parameters {
+        string(name: 'action', defaultValue: 'apply', description: 'Terraform action to perform (apply, destroy, etc)')
+    }
+    
+    stages {
+        stage("Checkout") {
             steps {
-                sh ("terraform init -reconfigure") 
+                git changelog: false, poll: false, url: 'https://github.com/vamsikrishna2049/deleteitlater.git'
             }
         }
         
-        stage ("plan") {
+        stage("Terraform Init") {
             steps {
-                sh ('terraform plan') 
+                sh 'terraform init -reconfigure'
             }
         }
-
-        stage (" Action") {
+        
+        stage("Terraform Plan") {
             steps {
-                echo "Terraform action is --> ${action}"
-                sh ('terraform ${action} --auto-approve') 
-           }
+                sh 'terraform plan'
+            }
+        }
+        
+        stage("Terraform Action") {
+            steps {
+                echo "Terraform action is --> ${params.action}"
+                sh "terraform ${params.action} --auto-approve"
+            }
         }
     }
 }
-    
